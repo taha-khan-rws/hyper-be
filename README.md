@@ -1,0 +1,1 @@
+Hyper is an initiative to automate the validation task of checking whether an adobe launch container and adobe datalayer present or not on a web page , Additionally it will validate whether the adobe analytics beacon [ PV , VV] fired or not. This app will extract hundreds of page from a homepage of website and scan all of those to validate as mentioned earlier.
