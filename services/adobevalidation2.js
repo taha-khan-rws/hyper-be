@@ -1,6 +1,7 @@
 const puppeteer = require("puppeteer");
 
 const validateAdobeBeacons2 = async (urls) => {
+    urls = urls[0,20]
   const browser = await puppeteer.launch({ headless: true });
 
   const page = await browser.newPage();
@@ -27,13 +28,10 @@ const validateAdobeBeacons2 = async (urls) => {
 
       // Monitor network requests for Adobe Analytics requests
       //   console.log(`Monitoring network requests on: ${urls[i]}`);
-      let analyticsRequestSent = false;
-      let analyticsResponseReceived = false;
 
       page.on("request", (request) => {
         if (request.url().includes("/b/ss/")) {
           // Adobe Analytics request endpoint
-          analyticsRequestSent = true;
 
           // console.log('✔ Adobe Analytics request sent');
         }
