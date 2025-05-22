@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
-
+const pino = require("pino");
+const logger = pino();
 const validateAdobeBeacons2 = async () => {
   const browser = await puppeteer.launch({ timeout: 0 });
   let urls = [];
@@ -25,43 +26,52 @@ const validateAdobeBeacons2 = async () => {
   });
   // urls = urls.slice(0, 21);
   urls = links.slice(0, 21);
-  console.log("List of urls ", urls);
+  logger.info("List of urls ", urls);
+  // Setting up the event listener for request event
+  page.on("request", (request) => {
+    // console.log(typeof request);
+    if (request.url().includes("/b/ss/")) {
+      // Adobe Analytics request endpoint
+      logger.info(
+        "requested url id ::",
+        request.url().split("/")[8].split("?")[0]
+      );
+      // request.continue();
+      logger.info(
+        "✔ Adobe Analytics request sent",
+        request.url().split("/")[8].split("?")[0]
+      );
+    } else {
+      // request.abort();
+    }
+  });
 
-  try {
-    for (let url of urls) {
-      console.log(`Navigating to: ${url}`);
+  for (let url of urls) {
+    try {
+      logger.info(`Navigating to: ${url}`);
       await page.goto(url, { waitUntil: "load", timeout: 0 }); // waitUntil : 'networkidle2'
-      await page.setRequestInterception(true);
+      // await page.setRequestInterception(true);
 
       // Check for Adobe Analytics tag presence in scripts
       //   console.log(`Validating Adobe Analytics tag presence on: ${url}`);
-      const hasAdobeAnalyticsTag = await page.evaluate(() => {
-        const scripts = Array.from(document.querySelectorAll("script"));
-        return scripts.some(
-          (script) =>
-            script.innerHTML.includes("s.t") ||
-            script.innerHTML.includes("s.tl")
-        );
-      });
-      if (hasAdobeAnalyticsTag) {
-        // console.log('✔ Adobe Analytics tag found');
-      } else {
-        // console.log('✘ Adobe Analytics tag NOT found');
-      }
+      // const hasAdobeAnalyticsTag = await page.evaluate(() => {
+      //   const scripts = Array.from(document.querySelectorAll("script"));
+      //   return scripts.some(
+      //     (script) =>
+      //       script.innerHTML.includes("s.t") ||
+      //       script.innerHTML.includes("s.tl")
+      //   );
+      // });
+      // if (hasAdobeAnalyticsTag) {
+      //   // console.log('✔ Adobe Analytics tag found');
+      // } else {
+      //   // console.log('✘ Adobe Analytics tag NOT found');
+      // }
 
       // Monitor network requests for Adobe Analytics requests
       //   console.log(`Monitoring network requests on: ${url}`);
 
-      page.on("request", (request) => {
-        console.log("requested urls ::", request.url());
-        if (request.url().includes("/b/ss/")) {
-          // Adobe Analytics request endpoint
-          request.continue();
-          console.log("✔ Adobe Analytics request sent");
-        } else {
-          request.abort();
-        }
-      });
+      //  Here comes the code of request listener
 
       // # commenting response , will look later about significance of validating reposnse
       // page.on("response", async (response) => {
@@ -78,15 +88,15 @@ const validateAdobeBeacons2 = async () => {
         return !!window.dataLayer && window.dataLayer.length > 0; // Checks if adobeDataLayer object exists
       });
       if (hasValidAdobeDataLayer) {
-        // console.log('✔ Valid Adobe Data Layer present');
+        logger.info("✔ Valid Adobe Data Layer present");
       } else {
-        // console.log('✘ Adobe Data Layer NOT found or invalid');
+        logger.info("✘ Adobe Data Layer NOT found or invalid");
       }
 
       // Close the page
+    } catch (error) {
+      logger.info(`An error occurred: ${error}`);
     }
-  } catch (error) {
-    console.error(`An error occurred: ${error}`);
   }
   // finally {
   await page.close();
