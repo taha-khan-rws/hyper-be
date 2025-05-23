@@ -1,6 +1,5 @@
 const puppeteer = require("puppeteer");
-const pino = require("pino");
-const logger = pino();
+
 const validateAdobeBeacons2 = async () => {
   const browser = await puppeteer.launch({ timeout: 0 });
   let urls = [];
@@ -26,18 +25,18 @@ const validateAdobeBeacons2 = async () => {
   });
   // urls = urls.slice(0, 21);
   urls = links.slice(0, 21);
-  logger.info("List of urls ", urls);
+  console.log("List of urls ", urls);
   // Setting up the event listener for request event
   page.on("request", (request) => {
     // console.log(typeof request);
     if (request.url().includes("/b/ss/")) {
       // Adobe Analytics request endpoint
-      logger.info(
+      console.log(
         "requested url id ::",
         request.url().split("/")[8].split("?")[0]
       );
       // request.continue();
-      logger.info(
+      console.log(
         "✔ Adobe Analytics request sent",
         request.url().split("/")[8].split("?")[0]
       );
@@ -48,7 +47,7 @@ const validateAdobeBeacons2 = async () => {
 
   for (let url of urls) {
     try {
-      logger.info(`Navigating to: ${url}`);
+      console.log(`Navigating to: ${url}`);
       await page.goto(url, { waitUntil: "load", timeout: 0 }); // waitUntil : 'networkidle2'
       // await page.setRequestInterception(true);
 
@@ -88,14 +87,14 @@ const validateAdobeBeacons2 = async () => {
         return !!window.dataLayer && window.dataLayer.length > 0; // Checks if adobeDataLayer object exists
       });
       if (hasValidAdobeDataLayer) {
-        logger.info("✔ Valid Adobe Data Layer present");
+        console.log("✔ Valid Adobe Data Layer present");
       } else {
-        logger.info("✘ Adobe Data Layer NOT found or invalid");
+        console.log("✘ Adobe Data Layer NOT found or invalid");
       }
 
       // Close the page
     } catch (error) {
-      logger.info(`An error occurred: ${error}`);
+      console.log(`An error occurred: ${error}`);
     }
   }
   // finally {
